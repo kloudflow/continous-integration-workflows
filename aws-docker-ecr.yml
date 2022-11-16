@@ -1,0 +1,56 @@
+name: Build and Test workflow for docker based services
+
+on:
+  workflow_call:
+    inputs:
+      env:
+        required: true
+        type: string
+        default: 'dev'
+      account:
+        required: true
+        type: string
+        default: ''
+      region:
+        required: true
+        type: string
+        default: 'us-east-1'
+      working-directory:
+        required: false
+        type: string
+        default: '.'
+
+jobs:
+
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    environment: ${{ inputs.env || 'dev' }}
+
+    if: (inputs.env == null || inputs.env == 'dev') && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials
+        with:
+          role-to-assume: github-ci-role #TODO configurable
+          aws-region: us-east-1
+
+      - name: Build, tag, and push image to AWS ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{inputs.account}}.dkr.ecr.${{inputs.region}} #TODO configurable
+          ECR_REPOSITORY: BeerService #TODO configurable
+          IMAGE_TAG: $GITHUB_SHA
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker login -u AWS -p $(aws ecr get-login-password --region eu-west-1) $ECR_REGISTRY
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
