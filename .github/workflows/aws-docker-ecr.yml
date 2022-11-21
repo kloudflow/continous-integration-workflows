@@ -41,7 +41,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: github-ci-role #TODO configurable
-          aws-region: us-east-1
+          aws-region: ${{inputs.region}}
+          account: ${{inputs.account}}
 
       - name: Build, tag, and push image to AWS ECR
         id: build-image
