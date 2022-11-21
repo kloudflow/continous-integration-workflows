@@ -42,7 +42,7 @@ jobs:
         with:
           role-to-assume: github-ci-role #TODO configurable
           aws-region: ${{inputs.region}}
-          account: ${{inputs.account}}
+          mask-aws-account-id: ${{inputs.account}}
 
       - name: Build, tag, and push image to AWS ECR
         id: build-image
