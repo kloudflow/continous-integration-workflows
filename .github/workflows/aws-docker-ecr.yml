@@ -40,9 +40,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: github-ci-role #TODO configurable
+          role-to-assume: arn:aws:iam::${{inputs.account}}:role/github-ci-role #TODO configurable
           aws-region: ${{inputs.region}}
-          mask-aws-account-id: ${{inputs.account}}
 
       - name: Build, tag, and push image to AWS ECR
         id: build-image
