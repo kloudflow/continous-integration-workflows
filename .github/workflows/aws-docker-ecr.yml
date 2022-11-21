@@ -35,10 +35,10 @@ jobs:
     if: (inputs.env == null || inputs.env == 'dev') && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout Code
-        uses: actions/checkout
+        uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: github-ci-role #TODO configurable
           aws-region: us-east-1
