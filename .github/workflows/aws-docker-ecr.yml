@@ -7,6 +7,9 @@ on:
         required: true
         type: string
         default: 'dev'
+      service:
+        required: true
+        type: string
       account:
         required: true
         type: string
@@ -15,6 +18,10 @@ on:
         required: true
         type: string
         default: 'us-east-1'
+      role:
+        required: false
+        type: string
+        default: 'github-ci-role'
       working-directory:
         required: false
         type: string
@@ -40,17 +47,18 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::${{inputs.account}}:role/github-ci-role #TODO configurable
+          role-to-assume: arn:aws:iam::${{inputs.account}}:role/${{inputs.role}} #TODO configurable
           aws-region: ${{inputs.region}}
 
       - name: Build, tag, and push image to AWS ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{inputs.account}}.dkr.ecr.${{inputs.region}}.amazonaws.com #TODO configurable
-          ECR_REPOSITORY: beer-service #TODO configurable
+          ECR_REPOSITORY: ${{inputs.service}} #TODO configurable
           IMAGE_TAG: ${{github.sha}}
+          REGION: ${{inputs.region}}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker login -u AWS -p $(aws ecr get-login-password --region us-east-1) $ECR_REGISTRY
+          docker login -u AWS -p $(aws ecr get-login-password --region $REGION) $ECR_REGISTRY
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
